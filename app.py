@@ -1,5 +1,6 @@
 import streamlit as st
 from predictor import show_predict_page
+from bulk_scanner import show_bulk_scanner_page
 
 st.set_page_config(
     page_title="Developer Salary Predictor",
@@ -204,11 +205,6 @@ st.markdown("""
         opacity: 0.6;
     }
     
-    /* Column containers */
-    .stColumns {
-        gap: 2rem;
-    }
-    
     /* Cards */
     .card {
         background: white;
@@ -261,11 +257,6 @@ st.markdown("""
         color: #333333;
     }
     
-    /* Help text */
-    .stTooltipHoverTarget {
-        color: #666666;
-    }
-    
     /* Responsive adjustments */
     @media (max-width: 768px) {
         h1 {
@@ -298,7 +289,7 @@ st.markdown("---")
 st.sidebar.markdown("### ⚙️ Navigation")
 page = st.sidebar.selectbox(
     "Choose a page",
-    ("Predict Salary", "About"),
+    ("Predict Salary", "Bulk Scanner", "About"),  # ← ADDED "Bulk Scanner"
     help="Select a page to navigate"
 )
 
@@ -322,6 +313,10 @@ st.sidebar.markdown("""
 # Page routing
 if page == "Predict Salary":
     show_predict_page()
+
+elif page == "Bulk Scanner":          # ← NEW ROUTE
+    show_bulk_scanner_page()
+
 else:
     st.title("📊 About This Predictor")
     
@@ -344,6 +339,7 @@ else:
         - **Accurate Predictions** using advanced ML models
         - **Multiple Factors** considered in calculation
         - **Real-time Results** instant salary estimates
+        - **Bulk Scanner** predict salaries for many records at once
         - **Completely Free** no hidden costs
         """)
     
@@ -364,7 +360,8 @@ else:
     
     st.markdown("""
     ### 🚀 Get Started
-    Click on **"Predict Salary"** in the sidebar to begin calculating your estimated salary.
+    Click on **"Predict Salary"** in the sidebar to begin calculating your estimated salary,
+    or use **"Bulk Scanner"** to predict salaries for multiple developers at once.
     """)
     
     st.success("Made with ❤️ for developers worldwide")
