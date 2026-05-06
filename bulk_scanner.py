@@ -7,7 +7,6 @@ from pathlib import Path
 from model_final import prepare_dataframe
 
 
-# ── reuse the same cached model from predictor.py ──────────────────────────
 @st.cache_resource
 def load_model():
     model_path = Path(__file__).resolve().parent / 'model_3.pkl'
@@ -16,7 +15,6 @@ def load_model():
     return data
 
 
-# ── currency conversion (same logic as predictor.py) ───────────────────────
 def get_inr_rate():
     try:
         import requests
@@ -26,7 +24,6 @@ def get_inr_rate():
         return 84
 
 
-# ── mapping helpers (same values used in predictor.py) ─────────────────────
 CURRENCY_MAP = {
     "INR": "INR\tIndian rupee",
     "Other": "Other"
@@ -52,73 +49,49 @@ REQUIRED_COLUMNS = [
     'LanguageHaveWorkedWith', 'DatabaseHaveWorkedWith', 'LearnCode'
 ]
 
-# ── sample data for download templates ──────────────────────────────────────
 SAMPLE_ROWS = [
     {
-        "Age": "25-34 years old",
-        "AISelect": "Yes",
-        "OrgSize": "100 to 499 employees",
-        "DevType": "Developer, full-stack",
-        "YearsCode": 5,
-        "WorkExp": 4,
-        "YearsCodePro": 3,
-        "RemoteWork": "Hybrid (some remote, some in-person)",
-        "Currency": "INR",
+        "Age": "25-34 years old", "AISelect": "Yes",
+        "OrgSize": "100 to 499 employees", "DevType": "Developer, full-stack",
+        "YearsCode": 5, "WorkExp": 4, "YearsCodePro": 3,
+        "RemoteWork": "Hybrid (some remote, some in-person)", "Currency": "INR",
         "EdLevel": "Bachelor's degree (B.A., B.S., B.Eng., etc.)",
         "LanguageHaveWorkedWith": "Python;JavaScript",
-        "DatabaseHaveWorkedWith": "MySQL;PostgreSQL",
-        "LearnCode": "Online courses;Books"
+        "DatabaseHaveWorkedWith": "MySQL;PostgreSQL", "LearnCode": "Online courses;Books"
     },
     {
-        "Age": "35-44 years old",
-        "AISelect": "No, and I don't plan to",
+        "Age": "35-44 years old", "AISelect": "No, and I don't plan to",
         "OrgSize": "1,000 to 4,999 employees",
         "DevType": "Data scientist or machine learning specialist",
-        "YearsCode": 10,
-        "WorkExp": 8,
-        "YearsCodePro": 7,
-        "RemoteWork": "Remote",
-        "Currency": "Other",
+        "YearsCode": 10, "WorkExp": 8, "YearsCodePro": 7,
+        "RemoteWork": "Remote", "Currency": "Other",
         "EdLevel": "Master's degree (M.A., M.S., M.Eng., MBA, etc.)",
         "LanguageHaveWorkedWith": "Python;R;SQL",
-        "DatabaseHaveWorkedWith": "MongoDB;Redis",
-        "LearnCode": "Colleague;Online courses"
+        "DatabaseHaveWorkedWith": "MongoDB;Redis", "LearnCode": "Colleague;Online courses"
     },
     {
-        "Age": "18-24 years old",
-        "AISelect": "No, but I plan to soon",
-        "OrgSize": "20 to 99 employees",
-        "DevType": "Developer, back-end",
-        "YearsCode": 2,
-        "WorkExp": 1,
-        "YearsCodePro": 1,
-        "RemoteWork": "In-person",
-        "Currency": "INR",
+        "Age": "18-24 years old", "AISelect": "No, but I plan to soon",
+        "OrgSize": "20 to 99 employees", "DevType": "Developer, back-end",
+        "YearsCode": 2, "WorkExp": 1, "YearsCodePro": 1,
+        "RemoteWork": "In-person", "Currency": "INR",
         "EdLevel": "Some college/university study without earning a degree",
         "LanguageHaveWorkedWith": "Java;Python",
-        "DatabaseHaveWorkedWith": "MySQL",
-        "LearnCode": "Online courses"
+        "DatabaseHaveWorkedWith": "MySQL", "LearnCode": "Online courses"
     }
 ]
 
 
-def predict_bulk(df_raw: pd.DataFrame, inr_rate: float) -> pd.DataFrame:
-    """Run model prediction for every row and return results dataframe."""
+def predict_bulk(df_raw, inr_rate):
     data = load_model()
     model = data["MODEL"]
     label_encoders = data["LABEL_ENCODERS"]
     scaler = data["SCALER"]
-
     results = []
-    errors = []
 
     for idx, row in df_raw.iterrows():
         try:
-            # Map currency short-code → full string
             currency_val = str(row.get("Currency", "Other")).strip()
             raw_currency = CURRENCY_MAP.get(currency_val, "Other")
-
-            # Map org size display → raw string
             orgsize_val = str(row.get("OrgSize", "")).strip()
             raw_orgsize = ORG_SIZE_OPTIONS.get(orgsize_val, orgsize_val)
 
@@ -160,7 +133,6 @@ def predict_bulk(df_raw: pd.DataFrame, inr_rate: float) -> pd.DataFrame:
                 "Salary (numeric)": round(salary_display, 2),
                 "Status": "✅ Success"
             })
-
         except Exception as e:
             results.append({
                 "Row": idx + 1,
@@ -176,7 +148,6 @@ def predict_bulk(df_raw: pd.DataFrame, inr_rate: float) -> pd.DataFrame:
     return pd.DataFrame(results)
 
 
-# ── main page function called from app.py ───────────────────────────────────
 def show_bulk_scanner_page():
     st.title("🔍 Bulk Salary Scanner")
     st.markdown("### Predict salaries for multiple developers at once")
@@ -186,12 +157,10 @@ def show_bulk_scanner_page():
     )
     st.markdown("---")
 
-    # ── Step 1: Download sample templates ───────────────────────────────────
     st.markdown("## 1️⃣ Download Sample Templates")
     st.markdown("Not sure about the format? Download a sample file to get started:")
 
     sample_df = pd.DataFrame(SAMPLE_ROWS)
-
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -207,10 +176,9 @@ def show_bulk_scanner_page():
     with col2:
         excel_buffer = io.BytesIO()
         sample_df.to_excel(excel_buffer, index=False, engine='openpyxl')
-        excel_bytes = excel_buffer.getvalue()
         st.download_button(
             label="📊 Download Excel Sample",
-            data=excel_bytes,
+            data=excel_buffer.getvalue(),
             file_name="sample_developers.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
@@ -227,8 +195,6 @@ def show_bulk_scanner_page():
         )
 
     st.markdown("---")
-
-    # ── Step 2: Upload file ──────────────────────────────────────────────────
     st.markdown("## 2️⃣ Upload Your File")
 
     uploaded_file = st.file_uploader(
@@ -239,8 +205,6 @@ def show_bulk_scanner_page():
 
     if uploaded_file is not None:
         st.markdown("---")
-
-        # ── Read uploaded file ───────────────────────────────────────────────
         try:
             file_name = uploaded_file.name.lower()
             if file_name.endswith(".csv"):
@@ -256,12 +220,10 @@ def show_bulk_scanner_page():
             st.error(f"❌ Could not read file: {e}")
             return
 
-        # ── Preview uploaded data ────────────────────────────────────────────
         st.markdown("## 3️⃣ Preview Uploaded Data")
         st.info(f"📂 **{uploaded_file.name}** — {len(df_input)} rows, {len(df_input.columns)} columns")
         st.dataframe(df_input.head(5), use_container_width=True)
 
-        # ── Validate required columns ────────────────────────────────────────
         missing_cols = [c for c in REQUIRED_COLUMNS if c not in df_input.columns]
         if missing_cols:
             st.error(f"❌ Missing required columns: **{', '.join(missing_cols)}**")
@@ -269,8 +231,6 @@ def show_bulk_scanner_page():
             return
 
         st.success(f"✅ All required columns found! Ready to scan **{len(df_input)}** records.")
-
-        # ── Run predictions ──────────────────────────────────────────────────
         st.markdown("---")
         st.markdown("## 4️⃣ Run Bulk Prediction")
 
@@ -283,7 +243,6 @@ def show_bulk_scanner_page():
             st.markdown("---")
             st.markdown("## 5️⃣ Results")
 
-            # Summary metrics
             total = len(results_df)
             success = results_df["Status"].str.startswith("✅").sum()
             failed = total - success
@@ -301,13 +260,11 @@ def show_bulk_scanner_page():
             else:
                 m4.metric("Average Salary", "N/A")
 
-            # Results table
             st.dataframe(
                 results_df.drop(columns=["Salary (numeric)"]),
                 use_container_width=True
             )
 
-            # ── Download results ─────────────────────────────────────────────
             st.markdown("### 📥 Download Results")
             dl1, dl2 = st.columns(2)
 
